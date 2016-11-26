@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+	   
+
+	<!-- 开启spring AOP代理 -->
+	<aop:config proxy-target-class="true"/>
+	<!-- 配置springmvc注解扫描的根包 -->
+	<context:component-scan base-package="com.wiseweb.ntc.web"/>	
+	<!-- 配置springmvc注解驱动
+		<mvc:annotation-driven/>会自动注册DefaultAnnotationHandlerMapping、
+		AnnotationMethodHandlerAdapter 两个bean,是spring MVC为@Controllers分发请求所必须的。
+		也可根据需要进行手动配置
+	 -->
+	<mvc:annotation-driven>
+		<mvc:message-converters>
+			<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                      <property name="supportedMediaTypes">
+                             <list>
+                                    <value>application/json;charset=UTF-8</value>
+                                    <value>text/html;charset=UTF-8</value>
+                             </list>
+                      </property>
+               </bean>
+		</mvc:message-converters>
+	</mvc:annotation-driven>
+	<!-- 配置不进行springmvc拦截的路径、请求 -->
+	<mvc:resources location="/res/" mapping="/res/**"/>   
+	<!-- 配置页面视图解析器 -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/view/"/>
+		<property name="suffix" value=".jsp"/>
+	</bean>
+	<!-- 配置springmvc拦截器 -->
+	<mvc:interceptors>
+    	<mvc:interceptor>
+    		<mvc:mapping path="/**"/><!-- 配置需要进行拦截的URL请求 -->
+    		<mvc:exclude-mapping path="/res/**"/><!-- 配置不需要拦截的URL请求 -->
+    		<ref bean="myHandlerInterceptor"/>
+    	</mvc:interceptor>
+    </mvc:interceptors>
+    
+    <bean id="myHandlerInterceptor" class="com.wiseweb.ntc.comment.filter.MyHandlerInterceptor">
+    	<property name="excludeUrls">
+    		<list>
+    			<value>login.htm</value>
+    			<value>logout.htm</value>
+    		</list>
+    	</property>
+    </bean>
+</beans>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:util="http://www.springframework.org/schema/util"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	   http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.1.xsd">
+	   
+	   	<!-- shiro核心配置。shiro工厂 -->
+	   	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+	   		<property name="securityManager" ref="securityManager"/>
+	   		<property name="loginUrl" value="/login.htm"/>
+	   		<property name="successUrl" value="/index.htm"/><!-- 认证通过后的请求路径 -->
+	   		<property name="filters">
+				<util:map>
+					<entry key="authc" value-ref="authcFilter" />
+					<entry key="user" value-ref="userFilter" />
+					<entry key="logout" value-ref="logoutFilter" />
+				</util:map>
+			</property>
+			<property name="filterChainDefinitions"><!-- 配置shiro过滤链 -->
+				<value>
+				/res/**=anon<!-- 匿名用户过滤器 -->
+				/user/regist.htm=anon<!-- 用户注册 -->
+				/login.htm=authc<!-- 当拦截的请求是GET方式不进行登录认证，根据上面设定的登录页面请求controller控制器 -->
+				/login.do=authc
+				/logout.htm=logout
+				/logout.do=logout
+				/**=user
+				</value>
+			</property>
+	   	</bean>
+	   	
+	   	<bean id="authcFilter" class="com.wiseweb.ntc.comment.filter.MyAuthenticationFilter" parent="myUrlBean"/>
+	   	<bean id="userFilter" class="com.wiseweb.ntc.comment.filter.MyUserFilter" parent="myUrlBean"/>
+		<bean id="logoutFilter" class="com.wiseweb.ntc.comment.filter.MyLogoutFilter" parent="myUrlBean"/>
+	   	<bean id="myUrlBean" class="com.wiseweb.ntc.comment.util.MyUrlBean">
+	 		<property name="loginUrl" value="/login.htm" />
+	 		<property name="prefix" value="/" />
+		</bean>
+		
+	   	<!-- 配置shiro安全管理器 -->
+	   	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+	   		<property name="realm" ref="myShiroRealm"/>
+	   		<property name="cacheManager" ref="cacheManager"/>
+	   	</bean>
+	   	<!-- 配置用户认证 -->
+	   	<bean id="myShiroRealm" class="com.wiseweb.ntc.comment.filter.MyShiroRealm">
+	   		<property name="credentialsMatcher">
+			<bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+				<property name="hashAlgorithmName" value="MD5"/>
+				<!--默认hex编码,false为base64编码-->
+				<property name="storedCredentialsHexEncoded" value="true"/>
+				<!--迭代次数-->
+				<property name="hashIterations" value="1"/>
+				<property name="hashSalted" value="true"/>
+			</bean>
+		</property>
+	   	</bean>
+	   	<!-- 配置shiro缓存管理器 -->
+	   	<bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager"/>
+	   	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />
+	   	<!-- 配置基于注解式权限扫描 -->
+		<bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+			<property name="securityManager" ref="securityManager"></property>
+		</bean>
+</beans>
